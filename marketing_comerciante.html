@@ -8,6 +8,7 @@
     <title>Central de Marketing - Moda Center</title>
     <link rel="stylesheet" href="css/marketing_comerciante.css">
     <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/assistant.css">
 </head>
 
 <body>
@@ -108,9 +109,6 @@
                     <span>
                         <strong>Meus Destaques</strong>
                         <small>Escolha os produtos que você quer colocar em destaque.</small>
-                    </span>
-                    <b>›</b>
-                </button>
 <!-- ----------(final) modificado por Marcos Substituição de Minha Transmissão por Chat por Meus Destaques--------- -->
 
                 <button class="marketing-card card-orange" type="button">
@@ -167,7 +165,7 @@
                     </div>
                 </div>
 
-                <button class="marketing-card card-pink" id="bulkOffersCard" type="button">
+                <button class="marketing-card card-pink" type="button">
                     <span class="card-icon">🛍</span>
                     <span>
                         <strong>Leve Mais por Menos</strong>
@@ -217,24 +215,13 @@
                     <label>Nome da campanha<input id="campaignName" type="text" required maxlength="60"
                             placeholder="Ex.: Semana do jeans"></label>
                     <label>Desconto (%)<input id="campaignDiscount" type="number" min="1" max="90" required></label>
-                    <label id="campaignScopeField">Aplicar em<select id="campaignScope">
+                    <label>Aplicar em<select id="campaignScope">
                             <option value="all">Todos os produtos</option>
                             <option value="category">Uma categoria</option>
                             <option value="product">Um produto</option>
                         </select></label>
                     <label id="campaignCategoryField" hidden>Categoria<select id="campaignCategory"></select></label>
                     <label id="campaignProductField" hidden>Produto<select id="campaignProduct"></select></label>
-
-                    <div id="bulkFields" hidden>
-                        <label>Quantidade mínima de unidades
-                            <input id="bulkMinUnits" type="number" min="2" step="1" value="2">
-                        </label>
-                        <div>
-                            <span class="bulk-field-title">Produtos participantes</span>
-                            <div id="bulkProducts" class="bulk-products-list"></div>
-                        </div>
-                    </div>
-
                     <div id="flashFields" hidden>
                         <label>Começa em<input id="flashStart" type="datetime-local"></label>
                         <label>Termina em<input id="flashEnd" type="datetime-local"></label>
@@ -323,6 +310,7 @@
     <script src="js/marketing_comerciante.js"></script>
     <script src="js/chat-badge.js"></script>
 
+    <script src="js/assistant.js"></script>
 </body>
 
 </html>

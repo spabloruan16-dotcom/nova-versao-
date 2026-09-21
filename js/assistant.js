@@ -1,11 +1,14 @@
-(() => {
-  "use strict";
+window.addEventListener("DOMContentLoaded", () => {
+  initAssistantWidget();
 
-  const TUTORIALS = {
-    produto: [
+  const pagePath = window.location.pathname;
+  let steps = [];
+
+  if (pagePath.includes("produto-novo")) {
+    steps = [
       {
         title: "📦 Cadastro de Novo Produto",
-        text: "Aqui você adiciona novos itens ao catálogo da sua loja. Preencha as informações com atenção para deixar seu anúncio completo.",
+        text: "Aqui você adiciona novos itens ao catálogo da sua loja. Preencha as informações com atenção para atratividade do seu anúncio.",
         btnText: "Próximo"
       },
       {
@@ -23,9 +26,9 @@
         text: "Adicione uma boa foto do produto e clique em <strong>Cadastrar produto</strong> ao final para publicar o item na sua loja.",
         btnText: "Entendi!"
       }
-    ],
-
-    marketing: [
+    ];
+  } else if (pagePath.includes("marketing")) {
+    steps = [
       {
         title: "📣 Central de Marketing",
         text: "Bem-vindo à sua Central de Marketing! Aqui você encontra soluções para atrair clientes, aumentar suas vendas e promover sua marca no Moda Center.",
@@ -33,22 +36,22 @@
       },
       {
         title: "🏷️ Promoções e Ofertas Relâmpago",
-        text: "Crie campanhas de desconto para sua loja através dos botões <strong>Promoções</strong> e <strong>Ofertas Relâmpago</strong>.",
+        text: "Crie campanhas de desconto exclusivas para a sua loja através dos botões <strong>Promoções</strong> e <strong>Ofertas e Relâmpago da Loja</strong>.",
         btnText: "Próximo"
       },
       {
         title: "📊 Campanhas Ativas",
-        text: "Acompanhe na seção <strong>Campanhas que estão rodando</strong> as promoções ativas no momento.",
+        text: "Acompanhe na seção <strong>'Campanhas que estão rodando'</strong> todas as promoções que estão ativas no momento para os seus clientes.",
         btnText: "Próximo"
       },
       {
         title: "💡 Dicas de Vendas",
-        text: "Consulte a área de <strong>Dicas para vender mais</strong> para conferir estratégias de divulgação e conteúdos para o comércio do Moda Center.",
+        text: "Consulte o banner de <strong>Dicas para vender mais</strong> para conferir tutoriais, estratégias de divulgação e conteúdos voltados para o comércio do Moda Center.",
         btnText: "Entendi!"
       }
-    ],
-
-    chat: [
+    ];
+  } else if (pagePath.includes("chat")) {
+    steps = [
       {
         title: "💬 Central de Mensagens",
         text: "Esta é sua central de conversas! Aqui você se comunica diretamente com clientes para tirar dúvidas, negociar e acompanhar pedidos.",
@@ -56,7 +59,7 @@
       },
       {
         title: "🔎 Buscando Conversas",
-        text: "Utilize a barra <strong>Pesquise algo ou alguém...</strong> para encontrar mensagens antigas ou conversas com clientes específicos.",
+        text: "Utilize a barra <strong>'Pesquise algo ou alguém...'</strong> no topo para encontrar mensagens antigas ou localizar conversas com clientes específicos.",
         btnText: "Próximo"
       },
       {
@@ -69,17 +72,17 @@
         text: "Caso precise de ajuda para localizar setores ou tirar dúvidas sobre o sistema, clique no ícone do <strong>Robô Guia</strong> no canto superior.",
         btnText: "Entendi!"
       }
-    ],
-
-    perfil: [
+    ];
+  } else if (pagePath.includes("perfil")) {
+    steps = [
       {
         title: "👤 Perfil da Loja",
-        text: "Aqui você gerencia a identidade da sua loja e acompanha suas métricas, como vendas, catálogo e avaliações.",
+        text: "Aqui você gerencia a identidade da sua loja e acompanha suas métricas: total de vendas, catálogo ativo e nota de avaliação.",
         btnText: "Próximo"
       },
       {
         title: "✏️ Editar Dados e Localização",
-        text: "Clique em <strong>Editar meu perfil</strong> para atualizar a foto da loja, segmentos de venda e localização.",
+        text: "Clique em <strong>'Editar meu perfil'</strong> para atualizar a foto da loja, alterar os segmentos de venda e manter o Setor, Rua e Box atualizados.",
         btnText: "Próximo"
       },
       {
@@ -89,15 +92,15 @@
       },
       {
         title: "⚙️ Configurações",
-        text: "No ícone de engrenagem <strong>⚙</strong> você gerencia preferências, segurança e sua sessão.",
+        text: "No ícone de engrenagem <strong>⚙</strong> no topo, você gerencia preferências de notificações, dados de segurança ou encerra sua sessão.",
         btnText: "Entendi!"
       }
-    ],
-
-    cliente: [
+    ];
+  } else if (pagePath.includes("cliente")) {
+    steps = [
       {
         title: "🛍️ Bem-vindo(a) ao Moda Center!",
-        text: "Aqui você encontra ofertas diretamente das lojas cadastradas. Vamos conferir como explorar a plataforma?",
+        text: "Aqui você encontra as melhores ofertas diretamente das lojas cadastradas. Vamos conferir como explorar a plataforma?",
         btnText: "Próximo"
       },
       {
@@ -107,304 +110,336 @@
       },
       {
         title: "🔎 Catálogo de Produtos",
-        text: "Utilize a barra de pesquisa para buscar roupas e acessórios, ver detalhes dos itens e adicioná-los ao carrinho.",
+        text: "Utilize a barra de pesquisa para buscar roupas e acessórios específicos, veja detalhes dos itens e adicione ao seu carrinho.",
         btnText: "Próximo"
       },
       {
         title: "🛒 Pedidos e Navegação",
-        text: "Acompanhe seus itens no <strong>Carrinho</strong>, veja o histórico em <strong>Minhas compras</strong> e fale com as lojas pelo <strong>Chat</strong>.",
+        text: "Acompanhe seus itens no <strong>Carrinho</strong>, veja o histórico em <strong>Minhas compras</strong> e fale diretamente com as lojas no <strong>Chat</strong>.",
         btnText: "Boas compras!"
       }
-    ],
-
-    inicio: [
+    ];
+  } else {
+    steps = [
       {
         title: "👋 Bem-vindo(a), Comerciante!",
-        text: "Este é o seu painel central no Moda Center. A partir daqui você tem acesso rápido ao gerenciamento da sua loja.",
+        text: "Este é o seu painel central no Moda Center. A partir daqui você tem acesso rápido a todo o gerenciamento da sua loja.",
         btnText: "Próximo"
       },
       {
         title: "👕 Seus Produtos e Pedidos",
-        text: "Na seção <strong>Seus produtos</strong> você visualiza seu catálogo e acessa os <strong>Pedidos dos clientes</strong>.",
+        text: "Na seção <strong>'Seus produtos'</strong> você visualiza seu catálogo e acessa diretamente a aba <strong>📦 Pedidos dos clientes</strong>.",
         btnText: "Próximo"
       },
       {
         title: "⚡ Atalhos Rápidos",
-        text: "Utilize os atalhos para <strong>Cadastrar novo produto</strong>, filtrar categorias ou gerenciar seu estoque.",
+        text: "Utilize os botões de atalho para <strong>Cadastrar novo produto</strong> (➕), filtrar por categorias ou gerenciar seus itens em estoque.",
         btnText: "Próximo"
       },
       {
         title: "🧭 Menu Inferior",
-        text: "Navegue entre <strong>Início</strong>, <strong>Chat</strong>, <strong>Marketing</strong> e <strong>Perfil</strong>.",
+        text: "Navegue facilmente entre a tela de <strong>Início</strong>, responda seus clientes no <strong>Chat</strong>, crie campanhas em <strong>Marketing</strong> e edite seu <strong>Perfil</strong>.",
         btnText: "Começar!"
       }
-    ]
-  };
-
-  const faqDatabase = {
-    cliente: [
-      {
-        q: "Como faço para acompanhar meu pedido?",
-        a: "Acesse <strong>Minhas compras</strong> no menu inferior para consultar o status dos seus pedidos."
-      },
-      {
-        q: "Como entrar em contato com um comerciante?",
-        a: "Na página do produto ou no menu de navegação, clique em <strong>Conversas / Chat</strong> para falar com a loja."
-      },
-      {
-        q: "Quais as formas de recebimento dos produtos?",
-        a: "No momento da compra, verifique as opções disponíveis, como <strong>retirada na loja</strong> ou <strong>entrega</strong>."
-      },
-      {
-        q: "Como funciona o Espelho Mágico?",
-        a: "Na área de compras, acesse o <strong>Espelho Mágico</strong> para visualizar combinações de peças disponíveis na plataforma."
-      }
-    ],
-
-    comerciante: [
-      {
-        q: "Como cadastrar novos produtos na minha loja?",
-        a: "Clique no botão <strong>+</strong> ou acesse o menu de cadastro. Preencha nome, valor, foto, estoque e variações do produto."
-      },
-      {
-        q: "Como ativar preços para vendas no atacado?",
-        a: "Na tela de cadastrar ou editar produto, marque <strong>Vendo este produto no atacado</strong> e informe a quantidade mínima e o preço."
-      },
-      {
-        q: "Como criar promoções na Central de Marketing?",
-        a: "Vá para <strong>Marketing</strong>, selecione <strong>Promoções</strong> ou <strong>Ofertas Relâmpago</strong> e configure a campanha."
-      },
-      {
-        q: "Como alterar Setor, Rua e Box da loja?",
-        a: "Acesse <strong>Perfil</strong>, clique em <strong>Editar meu perfil</strong> e atualize os dados de localização."
-      }
-    ]
-  };
-
-  function getPageKey() {
-    const path = window.location.pathname.toLowerCase();
-
-    if (path.includes("produto-novo")) return "produto";
-    if (path.includes("marketing")) return "marketing";
-    if (path.includes("chat")) return "chat";
-    if (path.includes("perfil_cliente") || path.includes("cliente")) return "cliente";
-    if (path.includes("perfil")) return "perfil";
-    if (path.includes("inicio_comerciante")) return "inicio";
-
-    return null;
+    ];
   }
 
-  function initAssistantWidget() {
-    if (document.getElementById("assistant-container")) return;
+  initTutorialSystem(steps);
+});
 
-    // Detecta se a rota é de cliente ou comerciante
-    const isCliente = window.location.pathname.toLowerCase().includes("cliente");
-    let currentCategory = isCliente ? "cliente" : "comerciante";
+// =========================================================
+// BASE DE DADOS DE DÚVIDAS E SOLUÇÕES (FAQ)
+// =========================================================
+const faqDatabase = {
+  cliente: [
+    {
+      q: "Como faço para acompanhar meu pedido?",
+      a: "Acesse a aba <strong>'Minhas compras'</strong> no menu inferior para ver o status em tempo real de cada pedido efetuado."
+    },
+    {
+      q: "Como entrar em contato com um comerciante?",
+      a: "Na página do produto ou pelo menu de navegação, clique na opção <strong>'Conversas / Chat'</strong> para falar diretamente com a loja."
+    },
+    {
+      q: "Quais as formas de recebimento dos produtos?",
+      a: "No momento da compra você pode optar por <strong>Retirar na loja</strong> (no box informado) ou receber via <strong>Entrega no seu endereço</strong>."
+    },
+    {
+      q: "Como funciona o Espelho Mágico?",
+      a: "Na tela inicial de compras, acesse o <strong>Espelho Mágico</strong> e suba uma foto sua para pré-visualizar as combinações de peças oferecidas na plataforma."
+    }
+  ],
+  comerciante: [
+    {
+      q: "Como cadastrar novos produtos na minha loja?",
+      a: "Clique no botão flutuante <strong>(+)</strong> no canto inferior ou acesse o menu de cadastro. Preencha nome, valor, foto, estoque e variações do produto."
+    },
+    {
+      q: "Como ativar preços para vendas no Atacado?",
+      a: "Na tela de cadastrar ou editar produto, marque a caixa <strong>'Vendo este produto no atacado'</strong>, informe a quantidade mínima e o preço especial por peça."
+    },
+    {
+      q: "Como criar promoções na Central de Marketing?",
+      a: "Vá para a aba <strong>Marketing</strong> no menu inferior, selecione <strong>'Promoções'</strong> ou <strong>'Ofertas Relâmpago'</strong> e defina a porcentagem de desconto desejada."
+    },
+    {
+      q: "Como alterar dados como Setor, Rua e Box da loja?",
+      a: "Acesse a aba <strong>Perfil</strong> no menu inferior, clique no botão <strong>'Editar meu perfil'</strong> e atualize as informações de localização da sua loja."
+    }
+  ]
+};
 
-    const container = document.createElement("div");
-    container.id = "assistant-container";
+// =========================================================
+// WIDGET DO ROBÔ GUIA & CENTRAL DE AJUDA
+// =========================================================
+function initAssistantWidget() {
+  if (document.getElementById("assistant-container")) return;
 
-    container.innerHTML = `
-      <div id="assistant-box" class="hidden" role="dialog" aria-label="Central de ajuda">
-        <div class="assistant-header">
-          <span>🤖 Guia Moda Center (${isCliente ? "Cliente" : "Comerciante"})</span>
-          <button type="button" id="close-btn" aria-label="Fechar ajuda">&times;</button>
+  const container = document.createElement("div");
+  container.id = "assistant-container";
+  container.innerHTML = `
+    <div id="assistant-box" class="hidden">
+      <div class="assistant-header">
+        <span>🤖 Guia Moda Center</span>
+        <button id="close-btn">&times;</button>
+      </div>
+      <div class="assistant-body">
+        <input type="text" id="faqSearch" class="assistant-search-input" placeholder="🔍 Buscar dúvida ou problema...">
+        
+        <div class="assistant-tabs">
+          <button class="tab-btn active" id="tabCliente" type="button">Sou Cliente</button>
+          <button class="tab-btn" id="tabComerciante" type="button">Sou Comerciante</button>
         </div>
 
-        <div class="assistant-body">
-          <input
-            type="search"
-            id="faqSearch"
-            class="assistant-search-input"
-            placeholder="🔍 Buscar dúvida ou problema..."
-            autocomplete="off"
-            aria-label="Buscar dúvida"
-          >
+        <button id="openTutorialBtn" class="assistant-tutorial-btn" type="button">🎓 Ver tutorial desta tela</button>
 
-          <div id="faqList" aria-live="polite"></div>
+        <div id="faqList"></div>
+      </div>
+    </div>
+    <button id="assistant-avatar" aria-label="Guia do Site">
+      <span style="font-size: 24px;">🤖</span>
+    </button>
+  `;
+  document.body.appendChild(container);
+
+  const box = document.getElementById("assistant-box");
+  const avatar = document.getElementById("assistant-avatar");
+  const closeBtn = document.getElementById("close-btn");
+  const tabCliente = document.getElementById("tabCliente");
+  const tabComerciante = document.getElementById("tabComerciante");
+  const searchInput = document.getElementById("faqSearch");
+
+  const currentPath = window.location.pathname.toLowerCase();
+  let currentCategory = (
+    currentPath.includes("cliente") ||
+    currentPath.includes("minhas-compras") ||
+    currentPath.includes("perfil_cliente")
+  ) ? "cliente" : "comerciante";
+
+  function renderFAQ(filterText = "") {
+    const listContainer = document.getElementById("faqList");
+    listContainer.innerHTML = "";
+
+    if (currentCategory === "cliente") {
+      tabCliente.classList.add("active");
+      tabComerciante.classList.remove("active");
+    } else {
+      tabComerciante.classList.add("active");
+      tabCliente.classList.remove("active");
+    }
+
+    const items = faqDatabase[currentCategory].filter(item => 
+      item.q.toLowerCase().includes(filterText.toLowerCase()) || 
+      item.a.toLowerCase().includes(filterText.toLowerCase())
+    );
+
+    if (items.length === 0) {
+      listContainer.innerHTML = `<p style="font-size:12px; color:#777; text-align:center; padding: 10px;">Nenhuma dúvida encontrada.</p>`;
+      return;
+    }
+
+    items.forEach((item, idx) => {
+      const faqItem = document.createElement("div");
+      faqItem.className = "faq-item";
+      faqItem.innerHTML = `
+        <button class="faq-question">
+          <span>${item.q}</span>
+          <span style="font-size:10px;">▼</span>
+        </button>
+        <div class="faq-answer">${item.a}</div>
+      `;
+
+      faqItem.querySelector(".faq-question").addEventListener("click", () => {
+        faqItem.classList.toggle("open");
+      });
+
+      listContainer.appendChild(faqItem);
+    });
+  }
+
+  // Eventos de clique
+  if (avatar) avatar.addEventListener("click", () => {
+    box.classList.toggle("hidden");
+    renderFAQ();
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", () => box.classList.add("hidden"));
+
+  tabCliente.addEventListener("click", () => {
+    currentCategory = "cliente";
+    renderFAQ(searchInput.value);
+  });
+
+  tabComerciante.addEventListener("click", () => {
+    currentCategory = "comerciante";
+    renderFAQ(searchInput.value);
+  });
+
+  searchInput.addEventListener("input", (e) => {
+    renderFAQ(e.target.value);
+  });
+
+  const openTutorialBtn = document.getElementById("openTutorialBtn");
+  if (openTutorialBtn) {
+    openTutorialBtn.addEventListener("click", () => {
+      if (typeof window.openAssistantTutorial === "function") {
+        window.openAssistantTutorial();
+      }
+    });
+  }
+
+  renderFAQ();
+}
+
+function initTutorialSystem(steps) {
+  if (!Array.isArray(steps) || steps.length === 0) return;
+
+  let tutorialModal = document.getElementById("tutorialModal");
+
+  // A V5.1 não possui um modal fixo em todas as páginas. Criamos o componente
+  // aqui para que o tutorial funcione em qualquer tela que carregue assistant.js.
+  if (!tutorialModal) {
+    tutorialModal = document.createElement("div");
+    tutorialModal.id = "tutorialModal";
+    tutorialModal.className = "tutorial-modal hidden";
+    tutorialModal.setAttribute("role", "dialog");
+    tutorialModal.setAttribute("aria-modal", "true");
+    tutorialModal.setAttribute("aria-labelledby", "tutorialTitle");
+    tutorialModal.innerHTML = `
+      <div class="tutorial-card">
+        <span class="assistant-icon" aria-hidden="true">🤖</span>
+        <h2 id="tutorialTitle"></h2>
+        <div class="tutorial-body">
+          <p id="tutorialText"></p>
+        </div>
+        <div id="tutorialDots" class="tutorial-steps-indicator" aria-label="Etapas do tutorial"></div>
+        <div class="tutorial-footer">
+          <button id="skipTutorialBtn" class="btn-secondary" type="button">Pular</button>
+          <button id="prevTutorialBtn" class="btn-secondary tutorial-prev-btn" type="button">Voltar</button>
+          <button id="nextTutorialBtn" class="btn-primary" type="button">Próximo</button>
         </div>
       </div>
-
-      <button type="button" id="assistant-avatar" aria-label="Abrir Guia Moda Center" aria-expanded="false">
-        <span aria-hidden="true">🤖</span>
-      </button>
     `;
-
-    document.body.appendChild(container);
-
-    const box = container.querySelector("#assistant-box");
-    const avatar = container.querySelector("#assistant-avatar");
-    const closeBtn = container.querySelector("#close-btn");
-    const searchInput = container.querySelector("#faqSearch");
-    const listContainer = container.querySelector("#faqList");
-
-    function renderFAQ(filterText = "") {
-      const filter = filterText.trim().toLowerCase();
-
-      listContainer.replaceChildren();
-
-      const items = (faqDatabase[currentCategory] || []).filter(item =>
-        `${item.q} ${item.a}`.toLowerCase().includes(filter)
-      );
-
-      if (!items.length) {
-        const empty = document.createElement("p");
-        empty.className = "assistant-empty";
-        empty.textContent = "Nenhuma dúvida encontrada.";
-        listContainer.appendChild(empty);
-        return;
-      }
-
-      items.forEach(item => {
-        const faqItem = document.createElement("div");
-        faqItem.className = "faq-item";
-
-        const question = document.createElement("button");
-        question.type = "button";
-        question.className = "faq-question";
-        question.innerHTML = `
-          <span>${item.q}</span>
-          <span class="faq-arrow" aria-hidden="true">▼</span>
-        `;
-
-        const answer = document.createElement("div");
-        answer.className = "faq-answer";
-        answer.innerHTML = item.a;
-        answer.hidden = true;
-
-        question.setAttribute("aria-expanded", "false");
-
-        question.addEventListener("click", () => {
-          const isOpen = faqItem.classList.toggle("open");
-          answer.hidden = !isOpen;
-          question.setAttribute("aria-expanded", String(isOpen));
-        });
-
-        faqItem.append(question, answer);
-        listContainer.appendChild(faqItem);
-      });
-    }
-
-    function openAssistant() {
-      box.classList.remove("hidden");
-      avatar.setAttribute("aria-expanded", "true");
-      renderFAQ(searchInput.value);
-    }
-
-    function closeAssistant() {
-      box.classList.add("hidden");
-      avatar.setAttribute("aria-expanded", "false");
-    }
-
-    avatar.addEventListener("click", () => {
-      box.classList.contains("hidden") ? openAssistant() : closeAssistant();
-    });
-
-    closeBtn.addEventListener("click", closeAssistant);
-
-    searchInput.addEventListener("input", event => {
-      renderFAQ(event.target.value);
-    });
-
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape" && !box.classList.contains("hidden")) {
-        closeAssistant();
-      }
-    });
-
-    renderFAQ();
+    document.body.appendChild(tutorialModal);
   }
 
-  function initTutorialSystem(steps) {
-    const tutorialModal = document.getElementById("tutorialModal");
+  const tutorialTitle = document.getElementById("tutorialTitle");
+  const tutorialText = document.getElementById("tutorialText");
+  const nextTutorialBtn = document.getElementById("nextTutorialBtn");
+  const prevTutorialBtn = document.getElementById("prevTutorialBtn");
+  const skipTutorialBtn = document.getElementById("skipTutorialBtn");
+  const dotsContainer = document.getElementById("tutorialDots");
 
-    if (!tutorialModal || !Array.isArray(steps) || steps.length === 0) return;
+  if (!tutorialTitle || !tutorialText || !nextTutorialBtn || !dotsContainer) return;
 
-    const tutorialTitle = document.getElementById("tutorialTitle");
-    const tutorialText = document.getElementById("tutorialText");
-    const nextTutorialBtn = document.getElementById("nextTutorialBtn");
-    const skipTutorialBtn = document.getElementById("skipTutorialBtn");
-    const indicator = tutorialModal.querySelector(".tutorial-steps-indicator");
+  const pageKey = (window.location.pathname || "inicio").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+  const storageKey = `modaCenterAssistantTutorial_${pageKey}`;
+  let currentStep = 0;
 
-    if (!tutorialTitle || !tutorialText || !nextTutorialBtn) return;
+  dotsContainer.innerHTML = steps.map((_, index) =>
+    `<span class="step-dot${index === 0 ? " active" : ""}" aria-hidden="true"></span>`
+  ).join("");
 
-    let currentStep = 0;
+  const dots = Array.from(dotsContainer.querySelectorAll(".step-dot"));
 
-    if (indicator) {
-      indicator.replaceChildren();
-
-      steps.forEach((_, index) => {
-        const dot = document.createElement("span");
-        dot.className = "step-dot";
-        dot.dataset.step = String(index + 1);
-        indicator.appendChild(dot);
-      });
+  function closeTutorial(markSeen = true) {
+    tutorialModal.classList.add("hidden");
+    tutorialModal.style.display = "none";
+    if (markSeen) {
+      try { localStorage.setItem(storageKey, "1"); } catch (_) {}
     }
+  }
 
-    function updateStepView() {
-      const step = steps[currentStep];
+  function updateStepView() {
+    const step = steps[currentStep];
+    tutorialTitle.innerHTML = step.title || "Guia Moda Center";
+    tutorialText.innerHTML = step.text || "";
+    nextTutorialBtn.textContent = step.btnText || (currentStep === steps.length - 1 ? "Concluir" : "Próximo");
 
-      tutorialTitle.innerHTML = step.title;
-      tutorialText.innerHTML = step.text;
-      nextTutorialBtn.textContent = step.btnText;
+    dots.forEach((dot, index) => dot.classList.toggle("active", index === currentStep));
 
-      if (indicator) {
-        indicator.querySelectorAll(".step-dot").forEach((dot, index) => {
-          dot.classList.toggle("active", index === currentStep);
-        });
-      }
+    if (prevTutorialBtn) {
+      prevTutorialBtn.style.display = currentStep === 0 ? "none" : "inline-flex";
     }
-
-    function closeTutorial() {
-      tutorialModal.style.display = "none";
-      tutorialModal.setAttribute("aria-hidden", "true");
-    }
-
-    function nextStep() {
-      if (currentStep < steps.length - 1) {
-        currentStep += 1;
-        updateStepView();
-      } else {
-        closeTutorial();
-      }
-    }
-
-    nextTutorialBtn.onclick = nextStep;
 
     if (skipTutorialBtn) {
-      skipTutorialBtn.onclick = closeTutorial;
+      skipTutorialBtn.textContent = currentStep === steps.length - 1 ? "Fechar" : "Pular";
     }
+  }
 
-    tutorialModal.onclick = event => {
-      if (event.target === tutorialModal) {
-        closeTutorial();
+  function openTutorial(force = true) {
+    currentStep = 0;
+    updateStepView();
+    tutorialModal.classList.remove("hidden");
+    tutorialModal.style.display = "flex";
+    if (force) {
+      try { localStorage.removeItem(storageKey); } catch (_) {}
+    }
+  }
+
+  window.openAssistantTutorial = openTutorial;
+
+  nextTutorialBtn.onclick = () => {
+    if (currentStep < steps.length - 1) {
+      currentStep += 1;
+      updateStepView();
+    } else {
+      closeTutorial(true);
+    }
+  };
+
+  if (prevTutorialBtn) {
+    prevTutorialBtn.onclick = () => {
+      if (currentStep > 0) {
+        currentStep -= 1;
+        updateStepView();
       }
     };
-
-    tutorialModal.setAttribute("aria-hidden", "false");
-    tutorialModal.style.display = "flex";
-    updateStepView();
   }
 
-  function init() {
-    initAssistantWidget();
+  if (skipTutorialBtn) skipTutorialBtn.onclick = () => closeTutorial(true);
 
-    const pageKey = getPageKey();
-    if (pageKey && TUTORIALS[pageKey]) {
-      initTutorialSystem(TUTORIALS[pageKey]);
-    }
-  }
-
-  // Única inicialização do assistente.
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
-
-  // Mantém a base disponível para outros scripts, se necessário.
-  window.ModacenterAssistant = {
-    faqDatabase,
-    tutorials: TUTORIALS
+  tutorialModal.onclick = (event) => {
+    if (event.target === tutorialModal) closeTutorial(true);
   };
-})();
+
+  document.addEventListener("keydown", (event) => {
+    if (tutorialModal.classList.contains("hidden")) return;
+    if (event.key === "Escape") closeTutorial(true);
+    if (event.key === "ArrowRight") nextTutorialBtn.click();
+    if (event.key === "ArrowLeft" && prevTutorialBtn && currentStep > 0) prevTutorialBtn.click();
+  });
+
+  updateStepView();
+
+  // Mostra automaticamente apenas na primeira visita daquela tela.
+  let alreadySeen = false;
+  try { alreadySeen = localStorage.getItem(storageKey) === "1"; } catch (_) {}
+  if (!alreadySeen) {
+    window.setTimeout(() => openTutorial(false), 350);
+  } else {
+    tutorialModal.classList.add("hidden");
+    tutorialModal.style.display = "none";
+  }
+}
+

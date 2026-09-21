@@ -262,7 +262,23 @@ function setNote(formId, message) {
 }
 
 
+function showToast(message) {
 
+    if (!toast) return;
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer = setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 2200);
+
+}
 
 
 // ======================================================

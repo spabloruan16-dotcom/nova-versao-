@@ -84,7 +84,18 @@ function updateVariationTotal() {
 
 addVariationButton.addEventListener("click", () => addVariationRow(variationRows));
 
+// Mostra uma mensagem curta no rodapé da tela por ~2,2s.
+function showToast(message) {
+	if (!toast) return;
 
+	toast.textContent = message;
+	toast.classList.add("show");
+
+	clearTimeout(window.toastTimer);
+	window.toastTimer = setTimeout(() => {
+		toast.classList.remove("show");
+	}, 2200);
+}
 
 // =========================================================
 // SELEÇÃO DE CATEGORIA (TIPO DE PRODUTO)
