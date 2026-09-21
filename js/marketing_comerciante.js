@@ -1,11 +1,9 @@
 // =========================================================
 // CENTRAL DE MARKETING (marketing_comerciante.html)
 // =========================================================
-// Esta tela ainda é só uma vitrine: nenhuma das ferramentas
-// (cupons, promoções, lives, etc.) tem uma página própria
-// implementada. Por isso, ao clicar em qualquer card, damos um
-// retorno visual (animação) e um aviso "em desenvolvimento",
-// em vez de deixar o clique sem nenhuma resposta.
+// Esta tela reúne ferramentas de marketing com diferentes níveis de implementação.
+// Os cards que já possuem fluxo funcional abrem sua respectiva ferramenta.
+// Somente os cards que ainda são vitrine exibem o aviso "em desenvolvimento".
 // =========================================================
 
 const toast = document.getElementById("toast");
@@ -369,18 +367,7 @@ campaignForm?.addEventListener("submit", event => {
 
 renderCampaigns();
 
-// Mostra uma mensagem curta no rodapé da tela por ~2,2s.
-function showToast(message) {
-	if (!toast) return;
 
-	toast.textContent = message;
-	toast.classList.add("show");
-
-	clearTimeout(window.toastTimer);
-	window.toastTimer = setTimeout(() => {
-		toast.classList.remove("show");
-	}, 2200);
-}
 
 
 // =========================================================
@@ -556,20 +543,28 @@ criarCartaoBtn?.addEventListener("click", async () => {
 // CARDS DE FERRAMENTAS
 // =========================================================
 document.querySelectorAll(".marketing-card").forEach(card => {
-	card.addEventListener("click", () => {
-		// ----------(incio) modificado por Marcos Inclusão do card Meus Destaques na animação dos cards---------
-		if (card.id === "promotionsCard" || card.id === "flashOffersCard" || card.id === "highlightsCard") return;
-// ----------(final) modificado por Marcos Inclusão do card Meus Destaques na animação dos cards---------
-		card.animate([
-			{ transform: "scale(1)" },
-			{ transform: "scale(.97)" },
-			{ transform: "scale(1)" }
-		], { duration: 180 });
+    card.addEventListener("click", () => {
+        // Estes cards já possuem eventos próprios. O handler genérico
+        // não pode mostrar "em desenvolvimento" depois que a ação real abre.
+        const functionalCards = new Set([
+            "promotionsCard",
+            "flashOffersCard",
+            "highlightsCard",
+            "fidelidadeCard",
+            "bulkOffersCard"
+        ]);
 
-		// Usa o texto do título do card na mensagem do toast.
-		const title = card.querySelector("strong")?.textContent || "Esta ferramenta";
-		showToast(`${title}: recurso em desenvolvimento.`);
-	});
+        if (functionalCards.has(card.id)) return;
+
+        card.animate([
+            { transform: "scale(1)" },
+            { transform: "scale(.97)" },
+            { transform: "scale(1)" }
+        ], { duration: 180 });
+
+        const title = card.querySelector("strong")?.textContent || "Esta ferramenta";
+        showToast(`${title}: recurso em desenvolvimento.`);
+    });
 });
 
 // =========================================================
