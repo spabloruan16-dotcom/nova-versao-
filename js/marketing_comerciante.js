@@ -547,7 +547,7 @@ criarCartaoBtn?.addEventListener("click", async () => {
 document.querySelectorAll(".marketing-card").forEach(card => {
 	card.addEventListener("click", () => {
 		// ----------(incio) modificado por Marcos Inclusão do card Meus Destaques na animação dos cards---------
-		if (card.id === "promotionsCard" || card.id === "flashOffersCard" || card.id === "highlightsCard") return;
+		if (card.id === "promotionsCard" || card.id === "flashOffersCard" || card.id === "highlightsCard" || card.id === "bulkOffersCard" || card.id === "fidelidadeCard") return;
 // ----------(final) modificado por Marcos Inclusão do card Meus Destaques na animação dos cards---------
 		card.animate([
 			{ transform: "scale(1)" },

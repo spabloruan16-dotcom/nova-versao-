@@ -109,16 +109,10 @@
                     <span>
                         <strong>Meus Destaques</strong>
                         <small>Escolha os produtos que você quer colocar em destaque.</small>
-<!-- ----------(final) modificado por Marcos Substituição de Minha Transmissão por Chat por Meus Destaques--------- -->
-
-                <button class="marketing-card card-orange" type="button">
-                    <span class="card-icon">📣</span>
-                    <span>
-                        <strong>Minha Transmissão por Chat</strong>
-                        <small>Divulgue seus produtos diretamente no chat.</small>
                     </span>
                     <b>›</b>
                 </button>
+<!-- ----------(final) modificado por Marcos Substituição de Minha Transmissão por Chat por Meus Destaques--------- -->
 
                 <button class="marketing-card card-green" id="fidelidadeCard" type="button">
                     <span class="card-icon">🎁</span>
@@ -165,7 +159,7 @@
                     </div>
                 </div>
 
-                <button class="marketing-card card-pink" type="button">
+                <button class="marketing-card card-pink" id="bulkOffersCard" type="button">
                     <span class="card-icon">🛍</span>
                     <span>
                         <strong>Leve Mais por Menos</strong>
@@ -215,7 +209,7 @@
                     <label>Nome da campanha<input id="campaignName" type="text" required maxlength="60"
                             placeholder="Ex.: Semana do jeans"></label>
                     <label>Desconto (%)<input id="campaignDiscount" type="number" min="1" max="90" required></label>
-                    <label>Aplicar em<select id="campaignScope">
+                    <label id="campaignScopeField">Aplicar em<select id="campaignScope">
                             <option value="all">Todos os produtos</option>
                             <option value="category">Uma categoria</option>
                             <option value="product">Um produto</option>
@@ -227,6 +221,13 @@
                         <label>Termina em<input id="flashEnd" type="datetime-local"></label>
                         <label class="check-field"><input id="flashUntilStock" type="checkbox"> Encerrar quando o
                             estoque acabar</label>
+                    </div>
+                    <div id="bulkFields" hidden>
+                        <div class="bulk-products-field">
+                            <span class="field-title">Produtos participantes</span>
+                            <div id="bulkProducts" class="bulk-products-list"></div>
+                        </div>
+                        <label>Quantidade mínima de unidades<input id="bulkMinUnits" type="number" min="2" step="1" value="2"></label>
                     </div>
                     <p id="campaignNote" class="campaign-note" role="status"></p>
                     <button class="campaign-save" type="submit">Ativar campanha</button>

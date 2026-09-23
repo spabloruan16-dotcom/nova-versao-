@@ -2,6 +2,8 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { mysqlEnabled } = require("./database");
+const { registerUser, loginUser, syncUsers } = require("./auth-database");
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_ROOTS = [path.join(__dirname, "v3"), path.join(__dirname, "Moda-Center-main", "v3"), __dirname];
@@ -12,11 +14,12 @@ const MIME_TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascrip
 
 function readDatabase() {
     try {
-        const database = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-        return { products: Array.isArray(database.products) ? database.products : [], stores: database.stores || {}, orders: Array.isArray(database.orders) ? database.orders : [], chats: Array.isArray(database.chats) ? database.chats : [], presence: database.presence || {}, users: Array.isArray(database.users) ? database.users : [] };
+    const database = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    return { products: Array.isArray(database.products) ? database.products : [], stores: database.stores || {}, orders: Array.isArray(database.orders) ? database.orders : [], chats: Array.isArray(database.chats) ? database.chats : [], presence: database.presence || {}, users: Array.isArray(database.users) ? database.users : [] ,loyaltyCards: Array.isArray(database.loyaltyCards)
+    ? database.loyaltyCards : [], loyaltyPoints: Array.isArray(database.loyaltyPoints) ? database.loyaltyPoints : [], loyaltyRedemptions: Array.isArray(database.loyaltyRedemptions) ? database.loyaltyRedemptions : []};
     } catch (error) {
-        return { products: [], stores: {}, orders: [], chats: [], presence: {}, users: [] };
     }
+    return { products: [], stores: {}, orders: [], chats: [], presence: {}, users: [] , loyaltyCards: [], loyaltyPoints: [], loyaltyRedemptions: []};
 }
 
 function writeDatabase(database) {
@@ -34,7 +37,85 @@ function writeDatabase(database) {
         }
     }
 }
+//// Cartao de fidelidade
+function adicionarPontoFidelidade(database, order) {
+    if (!order || order.status !== "entregue") {
+        return;
+    }
 
+    const clientId = String(order.clientId || "");
+
+    if (!clientId) {
+        return;
+    }
+
+    database.loyaltyCards = Array.isArray(database.loyaltyCards)
+        ? database.loyaltyCards
+        : [];
+
+    database.loyaltyPoints = Array.isArray(database.loyaltyPoints)
+        ? database.loyaltyPoints
+        : [];
+
+    const merchantIds = [
+        ...new Set(
+            (Array.isArray(order.items) ? order.items : [])
+                .map(item => String(item.ownerId || ""))
+                .filter(Boolean)
+        )
+    ];
+
+    for (const merchantId of merchantIds) {
+
+        const cartoesDoComerciante =
+            database.loyaltyCards.filter(
+                cartao =>
+                    String(cartao.ownerId || "") === merchantId
+            );
+
+        for (const cartao of cartoesDoComerciante) {
+
+            let registro = database.loyaltyPoints.find(
+                item =>
+                    String(item.cartaoId) === String(cartao.id) &&
+                    String(item.clientId) === clientId
+            );
+
+            if (!registro) {
+                registro = {
+                    cartaoId: cartao.id,
+                    clientId,
+                    pontos: 0,
+                    pedidos: []
+                };
+
+    database.loyaltyPoints.push(registro);
+    }
+    registro.pedidos = Array.isArray(registro.pedidos)
+    ? registro.pedidos
+    : [];
+    const pedidoJaContabilizado =
+    registro.pedidos.some(
+    pedidoId =>
+    String(pedidoId) === String(order.id)
+    );
+    if (pedidoJaContabilizado) {
+    continue;
+    }
+    registro.pontos =
+        Number(registro.pontos || 0) + 1;
+    registro.pedidos.push(order.id);
+    const meta = Number(cartao.metaPontos);
+    if (
+    Number.isInteger(meta) &&
+    meta > 0 &&
+    registro.pontos > meta
+    ) {
+    registro.pontos = meta;
+    }
+}
+}
+}
 function sendJson(response, status, payload) {
     response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
     response.end(JSON.stringify(payload));
@@ -62,13 +143,34 @@ function normalizeProduct(input) {
     const wholesale = input.wholesale && Number(input.wholesale.minQuantity) >= 2 && Number(input.wholesale.price) > 0 ? { minQuantity: Number(input.wholesale.minQuantity), price: Number(input.wholesale.price) } : null;
     const variations = Array.isArray(input.variations) ? input.variations.map(variation => ({ id: String(variation.id || crypto.randomUUID()), color: String(variation.color || "").trim(), size: String(variation.size || "").trim(), quantity: Math.max(0, Number(variation.quantity || 0)) })).filter(variation => variation.color && variation.size) : [];
     const quantity = variations.length ? variations.reduce((total, variation) => total + variation.quantity, 0) : Math.max(0, Number(input.quantity || 0));
-    return { id: String(input.id || crypto.randomUUID()), ownerId: String(input.ownerId), ownerName: String(input.ownerName || "Loja Moda Center"), name, description: String(input.description || ""), price, category: String(input.category || "Produto"), segments: Array.isArray(input.segments) ? input.segments : [], image: input.image || null, quantity, variations, discount: Math.min(100, Math.max(0, Number(input.discount || 0))), wholesale, salesCount: Math.max(0, Number(input.salesCount || 0)), ratings: Array.isArray(input.ratings) ? input.ratings : [], createdAt: input.createdAt || Date.now() };
+   // ----------(incio) modificado por Marcos Persistência e normalização do estado de destaque do produto---------
+    return { id: String(input.id || crypto.randomUUID()), ownerId: String(input.ownerId), ownerName: String(input.ownerName || "Loja Moda Center"), name, description: String(input.description || ""), price, category: String(input.category || "Produto"), segments: Array.isArray(input.segments) ? input.segments : [], image: input.image || null, quantity, variations, discount: Math.min(100, Math.max(0, Number(input.discount || 0))), wholesale, salesCount: Math.max(0, Number(input.salesCount || 0)), ratings: Array.isArray(input.ratings) ? input.ratings : [], highlighted: Boolean(input.highlighted), campaignId: input.campaignId || null, flashOffer: input.flashOffer || null, createdAt: input.createdAt || Date.now() };
+// ----------(final) modificado por Marcos Persistência e normalização do estado de destaque do produto---------}
 }
 
 async function handleApi(request, response, url) {
     const database = readDatabase();
     if (request.method === "GET" && url.pathname === "/api/health") return sendJson(response, 200, { ok: true, timestamp: new Date().toISOString() });
     if (request.method === "GET" && url.pathname === "/api/catalog") return sendJson(response, 200, { products: database.products, stores: database.stores });
+
+    // A V5.2 usa MySQL somente para autenticacao e preserva o banco JSON
+    // existente para catalogo, lojas, pedidos, chats e presenca.
+    const authPath = url.pathname === "/api/auth/register" || url.pathname === "/api/register";
+    const loginPath = url.pathname === "/api/auth/login" || url.pathname === "/api/login";
+    if ((mysqlEnabled && request.method === "POST" && authPath) || (request.method === "POST" && url.pathname === "/api/register")) {
+        const result = await registerUser(await readBody(request), database);
+        if (result.changed) writeDatabase(database);
+        return sendJson(response, result.status, result.error ? { error: result.error, mensagem: result.error } : { user: result.user, usuario: result.user });
+    }
+    if ((mysqlEnabled && request.method === "POST" && loginPath) || (request.method === "POST" && url.pathname === "/api/login")) {
+        const result = await loginUser(await readBody(request), database);
+        if (result.changed) writeDatabase(database);
+        return sendJson(response, result.status, result.error ? { error: result.error, mensagem: result.error } : { user: result.user, usuario: result.user });
+    }
+    if (mysqlEnabled && request.method === "POST" && url.pathname === "/api/auth/sync") {
+        await syncUsers((await readBody(request)).users, database);
+        return sendJson(response, 200, { ok: true });
+    }
 
     const storeMatch = url.pathname.match(/^\/api\/stores\/([^/]+)$/);
     if (request.method === "GET" && storeMatch) return sendJson(response, 200, { store: database.stores[decodeURIComponent(storeMatch[1])] || null });
@@ -83,7 +185,184 @@ async function handleApi(request, response, url) {
         writeDatabase(database);
         return sendJson(response, 200, { store: database.stores[ownerId] });
     }
+// =========================================================
+// CARTÃO DE FIDELIDADE
+// =========================================================
 
+// Listar cartões de fidelidade
+if (request.method === "GET" && url.pathname === "/api/loyalty-cards") {
+    return sendJson(response, 200, { cartoes: database.loyaltyCards });
+}
+
+// Criar cartão de fidelidade
+if (request.method === "POST" && url.pathname === "/api/loyalty-cards") {
+    const input = await readBody(request);
+    const nome = String(input.nome || "").trim();
+    const metaPontos = Number(input.metaPontos);
+    const recompensa = String(input.recompensa || "").trim();
+    const validade = input.validade ? String(input.validade) : null;
+    const ownerId = String(input.ownerId || "").trim();
+    const descontoValor = Number(input.descontoValor || 0);
+
+    if (!nome || !Number.isInteger(metaPontos) || metaPontos <= 0 || !recompensa || !ownerId || !(descontoValor > 0)) {
+        return sendJson(response, 400, { error: "Dados do cartão fidelidade invalidos" });
+    }
+
+    const cartao = {
+        id: crypto.randomUUID(),
+        ownerId,
+        nome,
+        metaPontos,
+        recompensa,
+        descontoValor,
+        validade,
+        createdAt: Date.now()
+    };
+
+    database.loyaltyCards = Array.isArray(database.loyaltyCards) ? database.loyaltyCards : [];
+    database.loyaltyCards.push(cartao);
+    writeDatabase(database);
+    return sendJson(response, 201, { cartao });
+}
+
+// Excluir cartão de fidelidade (e também pontos/resgates associados)
+if (request.method === "DELETE" && url.pathname.startsWith("/api/loyalty-cards/")) {
+    const cartaoId = String(url.pathname.split("/api/loyalty-cards/")[1] || "").trim();
+    if (!cartaoId) {
+        return sendJson(response, 400, { error: "ID do cartão é obrigatório" });
+    }
+
+    database.loyaltyCards = Array.isArray(database.loyaltyCards) ? database.loyaltyCards : [];
+    const index = database.loyaltyCards.findIndex(c => String(c.id) === cartaoId);
+    if (index === -1) {
+        return sendJson(response, 404, { error: "Cartão não encontrado" });
+    }
+
+    database.loyaltyCards.splice(index, 1);
+    database.loyaltyPoints = (database.loyaltyPoints || []).filter(p => String(p.cartaoId) !== cartaoId);
+    database.loyaltyRedemptions = (database.loyaltyRedemptions || []).filter(r => String(r.cartaoId) !== cartaoId);
+    writeDatabase(database);
+    return sendJson(response, 200, { ok: true });
+}
+
+// =========================================================
+// PONTOS DO CARTÃO DE FIDELIDADE
+// =========================================================
+
+if (request.method === "GET" && url.pathname === "/api/loyalty-points") {
+    const cartaoId = String(url.searchParams.get("cartaoId") || "");
+    const clientId = String(url.searchParams.get("clientId") || "");
+
+    if (!cartaoId || !clientId) {
+        return sendJson(response, 400, { error: "Cartão e cliente são obrigatórios" });
+    }
+
+    const cartao = database.loyaltyCards.find(item => String(item.id) === cartaoId);
+    if (!cartao) {
+        return sendJson(response, 404, { error: "Cartão não encontrado" });
+    }
+
+    const registro = database.loyaltyPoints.find(item =>
+        String(item.cartaoId) === cartaoId && String(item.clientId) === clientId
+    );
+
+    return sendJson(response, 200, {
+        pontos: registro ? Number(registro.pontos) || 0 : 0
+    });
+}
+
+// =========================================================
+// RECOMPENSAS ELEGÍVEIS + RESGATE
+// =========================================================
+
+if (request.method === "GET" && url.pathname === "/api/loyalty-eligible") {
+    const clientId = String(url.searchParams.get("clientId") || "");
+    if (!clientId) {
+        return sendJson(response, 400, { error: "clientId obrigatório" });
+    }
+
+    const redemptions = Array.isArray(database.loyaltyRedemptions) ? database.loyaltyRedemptions : [];
+    const usados = new Set(
+        redemptions
+            .filter(r => String(r.clientId) === clientId && !r.usedOrderId)
+            .map(r => String(r.cartaoId))
+    );
+
+    const elegiveis = [];
+    for (const cartao of database.loyaltyCards) {
+        if (cartao.validade) {
+            const validade = new Date(cartao.validade);
+            if (validade < new Date()) continue;
+        }
+
+        const registro = database.loyaltyPoints.find(item =>
+            String(item.cartaoId) === String(cartao.id) && String(item.clientId) === clientId
+        );
+        const pontos = registro ? Number(registro.pontos || 0) : 0;
+        const meta = Number(cartao.metaPontos || 0);
+
+        if (pontos >= meta && !usados.has(String(cartao.id))) {
+            elegiveis.push({
+                cartaoId: cartao.id,
+                ownerId: cartao.ownerId || null,
+                nome: cartao.nome,
+                recompensa: cartao.recompensa,
+                descontoValor: Number(cartao.descontoValor || 0),
+                metaPontos: meta,
+                pontosAtuais: pontos
+            });
+        }
+    }
+
+    return sendJson(response, 200, { elegiveis });
+}
+
+if (request.method === "POST" && url.pathname === "/api/loyalty-redeem") {
+    const input = await readBody(request);
+    const clientId = String(input.clientId || "");
+    const cartaoId = String(input.cartaoId || "");
+
+    if (!clientId || !cartaoId) {
+        return sendJson(response, 400, { error: "clientId e cartaoId obrigatórios" });
+    }
+
+    const cartao = database.loyaltyCards.find(c => String(c.id) === cartaoId);
+    if (!cartao) {
+        return sendJson(response, 404, { error: "Cartão não encontrado" });
+    }
+
+    const registro = database.loyaltyPoints.find(item =>
+        String(item.cartaoId) === cartaoId && String(item.clientId) === clientId
+    );
+    const pontos = registro ? Number(registro.pontos || 0) : 0;
+    const meta = Number(cartao.metaPontos || 0);
+
+    if (pontos < meta) {
+        return sendJson(response, 400, { error: "Pontos insuficientes para resgatar" });
+    }
+
+    database.loyaltyRedemptions = Array.isArray(database.loyaltyRedemptions) ? database.loyaltyRedemptions : [];
+    const jaResgatado = database.loyaltyRedemptions.some(r =>
+        String(r.clientId) === clientId && String(r.cartaoId) === cartaoId && !r.usedOrderId
+    );
+    if (jaResgatado) {
+        return sendJson(response, 409, { error: "Recompensa já resgatada, aguardando uso no pedido" });
+    }
+
+    const resgate = {
+        id: crypto.randomUUID(),
+        clientId,
+        cartaoId,
+        ownerId: cartao.ownerId || null,
+        descontoValor: Number(cartao.descontoValor || 0),
+        usedOrderId: null,
+        createdAt: Date.now()
+    };
+
+    database.loyaltyRedemptions.push(resgate);
+    writeDatabase(database);
+    return sendJson(response, 201, { resgate });
+}
     if (request.method === "DELETE" && storeMatch) {
         const ownerId = decodeURIComponent(storeMatch[1]);
         if (!database.stores[ownerId]) return sendJson(response, 404, { error: "Loja nao encontrada" });
@@ -449,6 +728,29 @@ async function handleApi(request, response, url) {
             return { productId: product.id, variationId: variation?.id || null, variation: variation ? { color: variation.color, size: variation.size } : null, ownerId: product.ownerId, ownerName: product.ownerName, name: product.name, price: product.price, quantity };
         });
         if (items.some(item => !item)) return sendJson(response, 409, { error: "Estoque insuficiente para um dos produtos" });
+        let descontoFidelidade = 0;
+        let resgateUsado = null;
+        if (redemptionId) {
+            database.loyaltyRedemptions = Array.isArray(database.loyaltyRedemptions)
+                ? database.loyaltyRedemptions
+                : [];
+            const resgate = database.loyaltyRedemptions.find(
+                r => String(r.id) === redemptionId &&
+                    String(r.clientId) === clientId &&
+                    !r.usedOrderId
+            );
+            if (!resgate) {
+                return sendJson(response, 400, { error: "Resgate de fidelidade inválido ou já utilizado" });
+            }
+            const produtosDaLoja = items.filter(
+                it => String(it.ownerId) === String(resgate.ownerId)
+            );
+            if (!produtosDaLoja.length) {
+                return sendJson(response, 400, { error: "Este resgate só vale para produtos da mesma loja do cartão de fidelidade." });
+            }
+            descontoFidelidade = Number(resgate.descontoValor || 0);
+            resgateUsado = resgate;
+        }
         items.forEach(item => {
             const product = database.products.find(entry => String(entry.id) === String(item.productId));
             const variation = item.variationId && Array.isArray(product.variations) ? product.variations.find(entry => String(entry.id) === String(item.variationId)) : null;
@@ -461,8 +763,22 @@ async function handleApi(request, response, url) {
         if (fulfillment === "delivery" && (!deliveryAddress?.recipient || !deliveryAddress.zip || !deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.state)) return sendJson(response, 400, { error: "Endereco de entrega obrigatorio" });
         const pickupLocations = fulfillment === "pickup" && Array.isArray(input.pickupLocations) ? input.pickupLocations : [];
         if (fulfillment === "pickup" && pickupLocations.some(location => !location?.location?.sector || !location.location.street || !location.location.box)) return sendJson(response, 400, { error: "Localizacao para retirada indisponivel" });
-        const order = { id: crypto.randomUUID(), clientId, clientName, fulfillment, deliveryAddress, pickupLocations, items, total: items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0), status: "recebido", createdAt: Date.now(), updatedAt: Date.now() };
+        const subtotal = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+        const total = Math.max(0, subtotal - descontoFidelidade);
+        const order = { id: crypto.randomUUID(), clientId, clientName, fulfillment, deliveryAddress, pickupLocations, items, subtotal, descontoFidelidade, total, redemptionId: redemptionId || null, status: "recebido", createdAt: Date.now(), updatedAt: Date.now() };
         database.orders.push(order);
+        if (resgateUsado) {
+            resgateUsado.usedOrderId = order.id;
+            const pointsEntry = database.loyaltyPoints.find(
+                lp => String(lp.cartaoId) === String(resgateUsado.cartaoId) &&
+                    String(lp.clientId) === clientId
+            );
+            if (pointsEntry) {
+                const cartao = database.loyaltyCards.find(c => String(c.id) === String(resgateUsado.cartaoId));
+                const meta = Number(cartao?.metaPontos || 0);
+                pointsEntry.pontos = Math.max(0, Number(pointsEntry.pontos || 0) - meta);
+            }
+        }
         writeDatabase(database);
         return sendJson(response, 201, { order, products: database.products });
     }
@@ -473,8 +789,12 @@ async function handleApi(request, response, url) {
         const allowedStatuses = ["recebido", "preparando", "postado", "enviado", "entregue", "cancelado"];
         const order = database.orders.find(item => item.id === decodeURIComponent(orderStatusMatch[1]));
         if (!order || !allowedStatuses.includes(input.status)) return sendJson(response, 400, { error: "Status invalido" });
+        const previousStatus = order.status;
         order.status = input.status;
         order.updatedAt = Date.now();
+        if (previousStatus !== "entregue" && input.status === "entregue") {
+            adicionarPontoFidelidade(database, order);
+        }
         writeDatabase(database);
         return sendJson(response, 200, { order });
     }
@@ -496,9 +816,13 @@ async function handleApi(request, response, url) {
         const input = await readBody(request);
         const order = database.orders.find(item => item.id === decodeURIComponent(orderConfirmMatch[1]));
         if (!order || String(order.clientId) !== String(input.clientId) || !["enviado", "entregue"].includes(order.status)) return sendJson(response, 403, { error: "O cliente ainda nao pode confirmar este pedido" });
+        const previousStatus = order.status;
         order.status = "entregue";
         order.confirmedAt = Date.now();
         order.updatedAt = Date.now();
+        if (previousStatus !== "entregue") {
+            adicionarPontoFidelidade(database, order);
+        }
         writeDatabase(database);
         return sendJson(response, 200, { order });
     }

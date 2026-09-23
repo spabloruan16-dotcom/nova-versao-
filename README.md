@@ -1,15 +1,29 @@
-# Moda-Center
+# Moda Center V5.2
 
-## Servidor da v3
+Esta pasta e uma copia independente da V5. Ela preserva catalogo, lojas, pedidos, chats e a interface visual, mas prepara a autenticacao para MySQL com bcrypt.
 
-A versão `v3` possui uma API HTTP em `server.js`. O catálogo do cliente consulta os produtos centralizados em `/api/catalog`, e novos produtos são enviados para `/api/products` quando o site está hospedado. O `localStorage` permanece apenas como fallback para demonstração offline.
+## Rodar localmente
 
-Para executar localmente com Node.js 20 ou superior:
-
-```bash
+```powershell
+npm install
 npm start
 ```
 
-Depois, abra `http://localhost:3000/`.
+Abra `http://localhost:3000`.
 
-Para manter o processo ativo em produção, use um gerenciador como PM2, configure um proxy HTTPS (Nginx ou equivalente), faça backups de `server/data.json` e monitore `/api/health`. Para múltiplos servidores ou alto volume, substitua o arquivo JSON por PostgreSQL/MySQL e use armazenamento de imagens próprio.
+Por padrao, a aplicacao usa `server/data.json`, para continuar funcionando sem MySQL. Para ativar MySQL:
+
+1. Copie `.env.example` para `.env`.
+2. Altere `DB_MODE=mysql` e preencha as credenciais.
+3. Crie o banco e a tabela executando `schema.sql` no MySQL.
+4. Inicie com `npm start`.
+
+A tabela `usuarios` armazena apenas o hash da senha. O cadastro e login aceitam as rotas atuais `/api/auth/register` e `/api/auth/login`, alem dos aliases `/api/register` e `/api/login`.
+
+Teste a conexao com:
+
+```powershell
+npm run db:check
+```
+
+O arquivo `.env` nao deve ser enviado ao GitHub.
