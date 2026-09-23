@@ -24,7 +24,7 @@ const API_ENABLED = window.location.protocol !== "file:";
 const backdrop = document.getElementById("authBackdrop");
 const title = document.getElementById("authTitle");
 const description = document.getElementById("authDescription");
-const toast = document.getElementById("toast");
+
 
 // ======================================================
 // FETCH COM NOVA TENTATIVA AUTOMÁTICA
@@ -262,23 +262,7 @@ function setNote(formId, message) {
 }
 
 
-function showToast(message) {
 
-    if (!toast) return;
-
-    toast.textContent = message;
-
-    toast.classList.add("show");
-
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer = setTimeout(() => {
-
-        toast.classList.remove("show");
-
-    }, 2200);
-
-}
 
 
 // ======================================================
@@ -703,15 +687,6 @@ document
 
                     if (
                         user.profile ===
-                        "administrador"
-                    ) {
-                        closeAuth();
-                        window.location.href = "admin.html";
-                        return;
-                    }
-
-                    if (
-                        user.profile ===
                         "comerciante"
                     ) {
 
@@ -912,16 +887,6 @@ document
 
                                 closeAuth();
 
-
-                                // ------------------------
-                                // Administrador
-                                // ------------------------
-
-                                if (user.profile === "administrador") {
-                                    closeAuth();
-                                    window.location.href = "admin.html";
-                                    return;
-                                }
 
                                 // ------------------------
                                 // Comerciante
@@ -1129,9 +1094,7 @@ document
                 // REDIRECIONA
                 // ------------------------------------------
 
-                if (profile === "administrador") {
-                    window.location.href = "admin.html";
-                } else if (
+                if (
                     profile ===
                     "comerciante"
                 ) {
@@ -1154,6 +1117,8 @@ document
         }
 
     });
+
+
 // ======================================================
 // LOGIN
 // ======================================================
@@ -1261,7 +1226,7 @@ document
 
         // Limpa formulário
 
-        
+        formElement.reset();
 
 
         // ==================================================
@@ -1271,10 +1236,7 @@ document
         // (inicio_comerciante.html e as demais telas). Contas "cliente"
         // permanecem na página inicial — a área do comerciante ainda
         // não existe para esse perfil.
-        if (user.profile === "administrador") {
-            closeAuth();
-            window.location.href = "admin.html";
-        } else if (user.profile === "comerciante") {
+        if (user.profile === "comerciante") {
 
             // Fecha modal
             closeAuth();

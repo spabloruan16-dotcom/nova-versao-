@@ -4,7 +4,7 @@ const backdrop=document.getElementById("authBackdrop");
 const app=document.querySelector(".app");
 const title=document.getElementById("authTitle");
 const description=document.getElementById("authDescription");
-const toast=document.getElementById("toast");
+
 const accountMessage=document.getElementById("accountMessage");
 
 // Cache em memoria para evitar leituras repetidas durante os testes.
@@ -47,12 +47,7 @@ function getUsers(){
 // Atualiza as mensagens de validacao sem alterar a estrutura dos formularios.
 function setNote(formId,message){document.getElementById(formId).textContent=message}
 
-function showToast(message){
-  toast.textContent=message;
-  toast.classList.add("show");
-  clearTimeout(window.toastTimer);
-  window.toastTimer=setTimeout(()=>toast.classList.remove("show"),2200);
-}
+
 
 function switchTab(tab){
   const isLogin=tab==="login";
